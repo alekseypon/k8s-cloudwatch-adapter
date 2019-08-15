@@ -68,43 +68,41 @@ func (h *Handler) handleExternalMetric(ns, name string, queueItem namespacedQueu
 	glog.V(2).Infof("externalMetricInfo: %v", externalMetricInfo)
 	queries := externalMetricInfo.Spec.Queries
 	cwMetricQueries := make([]cloudwatch.MetricDataQuery, len(queries))
-	for i, q := range queries {
-		dimensions := make([]cloudwatch.Dimension, len(q.MetricStat.Metric.Dimensions))
-		for j, d := range q.MetricStat.Metric.Dimensions {
+	for i, _ := range queries {
+		dimensions := make([]cloudwatch.Dimension, len(queries[i].MetricStat.Metric.Dimensions))
+		for j, _ := range queries[i].MetricStat.Metric.Dimensions {
 			dimensions[j] = cloudwatch.Dimension{
-				Name:  &d.Name,
-				Value: &d.Value,
+				Name:  &queries[i].MetricStat.Metric.Dimensions[j].Name,
+				Value: &queries[i].MetricStat.Metric.Dimensions[j].Value,
 			}
 		}
 		metric := &cloudwatch.Metric{
 			Dimensions: dimensions,
-			MetricName: &q.MetricStat.Metric.MetricName,
-			Namespace:  &q.MetricStat.Metric.Namespace,
+			MetricName: &queries[i].MetricStat.Metric.MetricName,
+			Namespace:  &queries[i].MetricStat.Metric.Namespace,
 		}
-		unit := cloudwatch.StandardUnit(q.MetricStat.Unit)
+		unit := cloudwatch.StandardUnit(queries[i].MetricStat.Unit)
 		var metricStat *cloudwatch.MetricStat
-		expression := q.Expression
-		id := q.ID
 		var e *string
 
-		if len(expression) == 0 {
+		if len(queries[i].Expression) == 0 {
 			e = nil
 			metricStat = &cloudwatch.MetricStat{
 				Metric: metric,
-				Period: &q.MetricStat.Period,
-				Stat:   &q.MetricStat.Stat,
+				Period: &queries[i].MetricStat.Period,
+				Stat:   &queries[i].MetricStat.Stat,
 				Unit:   unit,
 			}
 		} else {
-			e = &expression
+			e = &queries[i].Expression
 			metricStat = nil
 		}
 		cwMetricQueries[i] = cloudwatch.MetricDataQuery{
 			Expression: e,
-			Id:         &id,
-			Label:      &q.Label,
+			Id:         &queries[i].ID,
+			Label:      &queries[i].Label,
 			MetricStat: metricStat,
-			ReturnData: &q.ReturnData,
+			ReturnData: &queries[i].ReturnData,
 		}
 	}
 
